@@ -1,0 +1,20 @@
+[
+    {
+        "guid": "4344669f-555b-4525-b86f-d66dbb9ae81b",
+        "name": "Download Monitor",
+        "description": "A Jellyfin plugin that adds a Downloads menu item to the sidebar, allowing you to monitor active downloads from Radarr directly within the Jellyfin web interface.",
+        "overview": "Monitor and display Radarr download progress in Jellyfin",
+        "owner": "Kyandro",
+        "category": "General",
+        "versions": [
+            {
+                "version": "0.1.0.11",
+                "changelog": "Initial release",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://kyandro-voet.github.io/Jellyfin-Plugin-Download-Status/download-monitor/download-monitor_0.1.0.11.zip",
+                "checksum": "5f890bbcf5ac1d76b20d2504c8426352",
+                "timestamp": "2026-01-03T21:58:26Z"
+            }
+        ]
+    }
+]
