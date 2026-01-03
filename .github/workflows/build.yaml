@@ -9,26 +9,25 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     permissions:
       contents: write
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x' 
-
+      - name: Fix NuGet Sources
+        run: dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org || true
       - name: Build Release
         run: dotnet publish Jellyfin.Plugin.DownloadMonitor/Jellyfin.Plugin.DownloadMonitor.csproj --configuration Release --output bin/publish
-
-      - name: JPRM (Docker Action)
-        uses: oddstr13/jellyfin-plugin-repository-manager@master
-        with:
-          path: bin/publish
-          url: https://kyandro-voet.github.io/Jellyfin-Plugin-Download-Status
-          branch: gh-pages
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install JPRM Tool
+        run: dotnet tool install --global Jellyfin.Plugin.Repository.Manager --ignore-failed-sources
+      - name: Create Repo and Deploy
+        run: |
+          # Zorg dat Linux het commando 'jprm' kan vinden
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          
+          # Stap 4: Voer 'jprm' uit om alles te regelen
+          jprm repo bin/publish --url https://kyandro-voet.github.io/Jellyfin-Plugin-Download-Status --token ${{ secrets.GITHUB_TOKEN }} --branch gh-pages
