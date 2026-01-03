@@ -47,13 +47,33 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install JPRM from GitHub
+      - name: Install JPRM
         run: pip install git+https://github.com/oddstr13/jellyfin-plugin-repository-manager.git
 
-      - name: Create Manifest and Deploy
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: repo_dir
+
+      - name: Update Jellyfin Repo
         run: |
-          # Nu werkt dit commando wel zoals in de readme
-          jprm repo artifacts \
-            --url https://kyandro-voet.github.io/Jellyfin-Plugin-Download-Status \
-            --branch gh-pages \
-            --token ${{ secrets.GITHUB_TOKEN }}
+          # Maak map als die nog niet bestaat
+          mkdir -p repo_dir
+
+          # Initialiseer repo als manifest.json mist (eerste keer)
+          if [ ! -f repo_dir/manifest.json ]; then
+            echo "Initialising new repo..."
+            jprm repo init repo_dir --url https://kyandro-voet.github.io/Jellyfin-Plugin-Download-Status
+          fi
+
+          # Voeg de nieuwe zip toe (dit update de manifest.json)
+          # Commando: jprm repo add --url <URL> <REPO_DIR> <ZIP_FILE>
+          jprm repo add --url https://kyandro-voet.github.io/Jellyfin-Plugin-Download-Status repo_dir artifacts/*.zip
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: repo_dir
