@@ -1,0 +1,24 @@
+bin/
+obj/
+.vs/
+.vscode/
+.idea/
+artifacts
+
+# Build outputs
+*.dll
+*.pdb
+*.nupkg
+
+# User-specific files
+*.user
+*.suo
+
+# Publish output
+publish/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

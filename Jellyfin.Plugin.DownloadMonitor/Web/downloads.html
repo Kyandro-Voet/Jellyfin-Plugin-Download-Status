@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Downloads</title>
+    <style>
+        .download-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.5em;
+            margin-bottom: 1em;
+            transition: all 0.2s ease;
+        }
+        
+        .download-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(0, 164, 220, 0.5);
+        }
+        
+        .download-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1em;
+        }
+        
+        .download-icon {
+            font-size: 2.5em;
+            margin-right: 0.5em;
+            color: #00a4dc;
+        }
+        
+        .download-title {
+            flex: 1;
+            margin: 0;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+        
+        .download-status {
+            padding: 0.3em 0.8em;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        
+        .status-downloading {
+            background: rgba(0, 164, 220, 0.2);
+            color: #00a4dc;
+        }
+        
+        .status-completed {
+            background: rgba(0, 164, 0, 0.2);
+            color: #00ff00;
+        }
+        
+        .status-paused {
+            background: rgba(255, 152, 0, 0.2);
+            color: #ff9800;
+        }
+        
+        .download-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8em;
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .download-progress-bar {
+            background: rgba(255, 255, 255, 0.1);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .download-progress-fill {
+            background: linear-gradient(90deg, #00a4dc 0%, #0080ff 100%);
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .download-progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .download-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1em;
+            margin-top: 1em;
+            padding-top: 1em;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.85em;
+        }
+        
+        .download-detail {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .download-detail-label {
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 0.3em;
+            font-size: 0.9em;
+        }
+        
+        .download-detail-value {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+        
+        .no-downloads {
+            text-align: center;
+            padding: 3em;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .no-downloads-icon {
+            font-size: 4em;
+            margin-bottom: 0.5em;
+            opacity: 0.3;
+        }
+        
+        .refresh-button {
+            margin-bottom: 1em;
+        }
+    </style>
+</head>
+<body>
+    <div id="downloadMonitorPage" data-role="page" class="page type-interior">
+        <div data-role="content">
+            <div class="content-primary">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2em;">
+                    <h1 class="page-title" style="margin: 0;">
+                        <i class="material-icons" style="vertical-align: middle; margin-right: 0.3em;">download</i>
+                        Active Downloads
+                    </h1>
+                    <button is="emby-button" type="button" class="raised button-submit refresh-button" onclick="window.location.reload()">
+                        <i class="material-icons" style="vertical-align: middle; margin-right: 0.3em;">refresh</i>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+                <div id="download-list-container">
+                    <p style="text-align: center; padding: 2em; color: rgba(255,255,255,0.5);">Loading downloads...</p>
+                </div>
+            </div>
+        </div>
+        
+        <script type="text/javascript">
+            (function() {
+                console.log("[DownloadMonitor Page] Downloads page script starting...");
+                
+                const pluginId = "4344669f-555b-4525-b86f-d66dbb9ae81b";
+                let downloadData = [];
+                
+                function updateList() {
+                    console.log("[DownloadMonitor Page] Updating download list, items:", downloadData.length);
+                    const container = document.getElementById('download-list-container');
+                    if (!container) {
+                        console.warn("[DownloadMonitor Page] Container not found!");
+                        return;
+                    }
+
+                    if (!downloadData || downloadData.length === 0) {
+                        console.log("[DownloadMonitor Page] No downloads to show");
+                        container.innerHTML = '<p>Geen actieve downloads.</p>';
+                        return;
+                    }
+
+                    console.log("[DownloadMonitor Page] Rendering", downloadData.length, "downloads");
+                    let html = '<div class="verticalSection">';
+                    downloadData.forEach(item => {
+                        const title = item.title || "Onbekend";
+                        const status = item.status || "Onbekend";
+                        const total = item.size || 1;
+                        const left = item.sizeleft || 0;
+                        const progress = Math.round(((total - left) / total) * 100);
+
+                        html += `
+                            <div class="listItem" style="margin-bottom: 1em; padding: 1em; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                                <div class="listItemBody">
+                                    <h3 style="margin: 0 0 0.5em 0;">${title}</h3>
+                                    <div style="display:flex; justify-content:space-between; margin-bottom: 0.5em;">
+                                        <span>Status: ${status}</span>
+                                        <span>${progress}%</span>
+                                    </div>
+                                    <div style="background:#444; height:6px; border-radius:3px; overflow:hidden;">
+                                        <div style="background:#00a4dc; height:100%; width:${progress}%; transition: width 0.3s;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                }
+
+                function setupWebSocket() {
+                    console.log("[DownloadMonitor Page] Setting up WebSocket listener...");
+                    if (typeof ApiClient !== 'undefined') {
+                        console.log("[DownloadMonitor Page] ApiClient available");
+                        
+                        document.addEventListener('websocketmessage', function(e) {
+                            console.log("[DownloadMonitor Page] WebSocket message received:", e.detail);
+                            const msg = e.detail;
+                            if (msg.MessageType === 'ForceKeepAlive' && msg.Data) {
+                                try {
+                                    if (msg.Data.MessageType === 'DownloadStatusUpdate' && msg.Data.Data) {
+                                        console.log("[DownloadMonitor Page] Download status update received");
+                                        const parsed = JSON.parse(msg.Data.Data);
+                                        console.log("[DownloadMonitor Page] Parsed data:", parsed);
+                                        downloadData = parsed.records || parsed.queue || [];
+                                        console.log("[DownloadMonitor Page] Download items:", downloadData.length);
+                                        updateList();
+                                    }
+                                } catch (err) {
+                                    console.error("[DownloadMonitor Page] Error parsing download data:", err);
+                                }
+                            }
+                        });
+                        console.log("[DownloadMonitor Page] WebSocket listener registered");
+                    } else {
+                        console.warn("[DownloadMonitor Page] ApiClient not available yet");
+                    }
+                }
+
+                document.querySelector('#downloadMonitorPage').addEventListener('pageshow', function() {
+                    console.log("[DownloadMonitor Page] Page shown, initializing...");
+                    updateList();
+                    setupWebSocket();
+                });
+                
+                console.log("[DownloadMonitor Page] Script initialized");
+                updateList();
+                setupWebSocket();
+            })();
+        </script>
+    </div>
+</body>
+</html>
+</body>
+</html>

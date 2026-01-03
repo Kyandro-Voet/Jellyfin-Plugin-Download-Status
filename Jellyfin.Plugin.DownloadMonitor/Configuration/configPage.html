@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Download Monitor Config</title>
+    <style>
+        .info-box {
+            background: linear-gradient(135deg, rgba(0, 164, 220, 0.1) 0%, rgba(0, 100, 220, 0.05) 100%);
+            border: 1px solid rgba(0, 164, 220, 0.3);
+            border-radius: 8px;
+            padding: 1.5em;
+            margin-bottom: 2em;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #00a4dc;
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+        }
+        .code-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 0.8em;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+            margin: 0.5em 0;
+        }
+        details {
+            margin-top: 1em;
+        }
+        summary {
+            cursor: pointer;
+            color: #00a4dc;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                
+                <h1>Download Monitor Instellingen</h1>
+
+                <div class="info-box">
+                    <h3>
+                        <span class="material-icons">info</span>
+                        <span>Plugin Status</span>
+                    </h3>
+                    <p>De plugin probeert automatisch de Download Monitor knop toe te voegen aan de sidebar.</p>
+                    
+                    <details>
+                        <summary>Docker / Handmatige Setup (klik om uit te vouwen)</summary>
+                        <p style="margin-top: 1em;">Als de sidebar knop niet verschijnt (bijv. in Docker), voer dit commando uit in je container:</p>
+                        <div class="code-box">
+                            sed -i 's|&lt;/head&gt;|&lt;script src="/web/configurationpage?name=downloadmonitor.js" defer&gt;&lt;/script&gt;&lt;/head&gt;|' /jellyfin/jellyfin-web/index.html
+                        </div>
+                        <p><strong>Tip:</strong> Voeg dit toe aan je container startup script om het persistent te maken.</p>
+                    </details>
+                </div>
+
+                <h2 style="margin-top: 2em;">Radarr/Sonarr Configuratie</h2>
+
+                <form id="downloadMonitorConfigForm">
+                    
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="RadarrUrl" label="Radarr/Sonarr URL" required />
+                        <div class="fieldDescription">Bijv: http://192.168.1.50:7878</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="RadarrApiKey" label="API Key" required />
+                        <div class="fieldDescription">Je vindt deze in Radarr onder Settings > General.</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="RefreshInterval" label="Update Interval (seconden)" min="1" />
+                    </div>
+
+                    <button is="emby-button" type="submit" class="raised button-submit block">
+                        <span>Opslaan</span>
+                    </button>
+
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var pluginId = "4344669f-555b-4525-b86f-d66dbb9ae81b"; 
+
+            document.querySelector('#downloadMonitorConfigForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                var config = {
+                    RadarrUrl: document.querySelector('#RadarrUrl').value,
+                    RadarrApiKey: document.querySelector('#RadarrApiKey').value,
+                    RefreshInterval: parseInt(document.querySelector('#RefreshInterval').value)
+                };
+
+                ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
+                    Dashboard.processPluginConfigurationUpdateResult(result);
+                });
+            });
+
+            // Data inladen bij openen
+            (function loadConfig() {
+                ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                    var radarrUrl = document.querySelector('#RadarrUrl');
+                    var radarrApiKey = document.querySelector('#RadarrApiKey');
+                    var refreshInterval = document.querySelector('#RefreshInterval');
+                    
+                    if (radarrUrl) radarrUrl.value = config.RadarrUrl || "";
+                    if (radarrApiKey) radarrApiKey.value = config.RadarrApiKey || "";
+                    if (refreshInterval) refreshInterval.value = config.RefreshInterval || "2";
+                }).catch(function(err) {
+                    console.log('Error loading config:', err);
+                });
+            })();
+        </script>
+    </div>
+</body>
+</html>
