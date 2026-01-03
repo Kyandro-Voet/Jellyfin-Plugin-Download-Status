@@ -8,6 +8,17 @@
     <Nullable>enable</Nullable>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <CodeAnalysisRuleSet>../jellyfin.ruleset</CodeAnalysisRuleSet>
+
+    <Authors>Kyandro Voet</Authors>
+    <Company>Kyandro Voet</Company>
+    <Description>Tracks the status of downloads and displays it in the interface</Description>
+    <PackageProjectUrl>https://github.com/kyandro-voet/Jellyfin-Plugin-Download-Status</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/kyandro-voet/Jellyfin-Plugin-Download-Status</RepositoryUrl>
+
+    <GenerateAssemblyTitleAttribute>true</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyDescriptionAttribute>true</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyProductAttribute>true</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
   </PropertyGroup>
 
   <ItemGroup>
