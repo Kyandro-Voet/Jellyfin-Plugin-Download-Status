@@ -6,34 +6,38 @@ on:
       - 'v*'
     branches:
       - main
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    # Geeft toestemming om bestanden te uploaden naar GitHub Pages
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.*'
+          dotnet-version: '8.0.x' # Pas aan naar 9.0.x als je Jellyfin 10.10+ gebruikt
 
-      - name: Build Plugin
+      - name: Build Release
+        # Bouwt de DLL in Release modus
         run: dotnet publish --configuration Release --output bin/publish
 
-      - name: Create Zip
-        run: |
-          cd bin/publish
-          zip -r ../../DownloadMonitor.zip .
-          cd ../..
+      - name: Install JPRM Tool
+        # We installeren de tool direct, dit werkt altijd (geen version errors meer)
+        run: dotnet tool install --global Jellyfin.Plugin.Repository.Manager
 
-      - name: JPRM (Generate Manifest)
-        uses: oddstr13/jellyfin-plugin-repository-manager@v2
-        with:
-          path: '.' 
-          zip: 'DownloadMonitor.zip'
-          url: 'https://kyandro-voet.github.io/Jellyfin-Plugin-Download-Status'
-          branch: 'gh-pages'
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Repo and Deploy
+        run: |
+          # Zorg dat de geïnstalleerde tool gevonden wordt
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          
+          # JPRM doet nu ALLES:
+          # 1. Zipt je bestanden
+          # 2. Maakt de manifest.json
+          # 3. Pusht het naar de 'gh-pages' branch
+          jprm --url https://kyandro-voet.github.io/Jellyfin-Plugin-Download-Status --token ${{ secrets.GITHUB_TOKEN }} --branch gh-pages --path bin/publish
