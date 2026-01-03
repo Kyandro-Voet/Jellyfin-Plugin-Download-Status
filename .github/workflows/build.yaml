@@ -5,6 +5,7 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,23 +22,17 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Get Version from Tag
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
 
       - name: Build Release
-        run: dotnet build Jellyfin.Plugin.DownloadMonitor/Jellyfin.Plugin.DownloadMonitor.csproj --configuration Release --no-restore
+        run: dotnet publish Jellyfin.Plugin.DownloadMonitor/Jellyfin.Plugin.DownloadMonitor.csproj --configuration Release --output bin/publish /p:Version=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }}
 
-      - name: Create plugin zip
+      - name: Download JPRM Tool directly
         run: |
-          mkdir -p artifacts
-          cd Jellyfin.Plugin.DownloadMonitor/bin/Release/net9.0
-          zip -r ../../../../artifacts/download-monitor-${{ github.ref_name }}.zip *.dll
+          wget https://github.com/oddstr13/jellyfin-plugin-repository-manager/releases/download/v0.5.0/jprm-linux-x64 -O jprm
+          chmod +x jprm
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: artifacts/*.zip
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Repo and Deploy
+        run: |
+          ./jprm repo bin/publish --url https://kyandro-voet.github.io/Jellyfin-Plugin-Download-Status --token ${{ secrets.GITHUB_TOKEN }} --branch gh-pages
