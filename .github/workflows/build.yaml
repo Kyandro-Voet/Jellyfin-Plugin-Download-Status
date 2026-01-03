@@ -20,21 +20,15 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '9.0.x' 
 
       - name: Build Release
         run: dotnet publish Jellyfin.Plugin.DownloadMonitor/Jellyfin.Plugin.DownloadMonitor.csproj --configuration Release --output bin/publish
 
-      - name: Install JPRM Tool
-        run: dotnet tool install --global Jprm
-
-      - name: Create Repo and Deploy
-        run: |
-          # Zorg dat de geïnstalleerde tool gevonden wordt
-          export PATH="$PATH:$HOME/.dotnet/tools"
-          
-          # JPRM doet nu ALLES:
-          # 1. Zipt je bestanden
-          # 2. Maakt de manifest.json
-          # 3. Pusht het naar de 'gh-pages' branch
-          jprm repo bin/publish --url https://kyandro-voet.github.io/Jellyfin-Plugin-Download-Status --token ${{ secrets.GITHUB_TOKEN }} --branch gh-pages
+      - name: JPRM (Docker Action)
+        uses: oddstr13/jellyfin-plugin-repository-manager@master
+        with:
+          path: bin/publish
+          url: https://kyandro-voet.github.io/Jellyfin-Plugin-Download-Status
+          branch: gh-pages
+          token: ${{ secrets.GITHUB_TOKEN }}
