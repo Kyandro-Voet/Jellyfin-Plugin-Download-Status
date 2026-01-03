@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: write
 
@@ -47,14 +47,12 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install JPRM via Pip
-        # Dit is de eerste optie uit jouw screenshot ("From PyPI")
-        # Dit is de meest veilige en officiële manier.
-        run: pip install jprm
+      - name: Install JPRM from GitHub
+        run: pip install git+https://github.com/oddstr13/jellyfin-plugin-repository-manager.git
 
       - name: Create Manifest and Deploy
         run: |
-          # Het commando is nu beschikbaar omdat we het via pip hebben geïnstalleerd
+          # Nu werkt dit commando wel zoals in de readme
           jprm repo artifacts \
             --url https://kyandro-voet.github.io/Jellyfin-Plugin-Download-Status \
             --branch gh-pages \
