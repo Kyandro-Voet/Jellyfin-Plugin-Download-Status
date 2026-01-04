@@ -19,6 +19,7 @@ namespace Jellyfin.Plugin.DownloadMonitor.Service
         private readonly ILogger<DownloadStatusService> _logger;
         private readonly HttpClient _httpClient;
         private Timer? _timer;
+        private string? _lastDataSent;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DownloadStatusService"/> class.
@@ -138,11 +139,17 @@ namespace Jellyfin.Plugin.DownloadMonitor.Service
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("⏹️ Download Monitor Service stopping...");
-            _timer?.Change(Timeout.Infinite, 0);
-            return Task.CompletedTask;
+
+            // Stop the timer completely during shutdown
+            if (_timer != null)
+            {
+                _timer.Change(Timeout.Infinite, 0);
+                await _timer.DisposeAsync().ConfigureAwait(false);
+                _timer = null;
+            }
         }
 
         private async void OnTimerCallback(object? state)
@@ -180,11 +187,18 @@ namespace Jellyfin.Plugin.DownloadMonitor.Service
                 {
                     var jsonString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-                    // Send raw Radarr JSON to the frontend via WebSocket
-                    await _sessionManager.SendMessageToAdminSessions(
-                        MediaBrowser.Model.Session.SessionMessageType.ForceKeepAlive,
-                        new { MessageType = "DownloadStatusUpdate", Provider = "Radarr", Data = jsonString },
-                        cancellationToken: default).ConfigureAwait(false);
+                    // Only send WebSocket message if data has actually changed
+                    // This prevents spam and reduces KeepAlive message frequency
+                    if (!string.IsNullOrWhiteSpace(jsonString) && jsonString != _lastDataSent)
+                    {
+                        _lastDataSent = jsonString;
+
+                        // Send raw Radarr JSON to the frontend via WebSocket
+                        await _sessionManager.SendMessageToAdminSessions(
+                            MediaBrowser.Model.Session.SessionMessageType.UserDataChanged,
+                            new { MessageType = "DownloadStatusUpdate", Provider = "Radarr", Data = jsonString },
+                            cancellationToken: default).ConfigureAwait(false);
+                    }
                 }
             }
             catch (Exception ex)
@@ -198,8 +212,19 @@ namespace Jellyfin.Plugin.DownloadMonitor.Service
         /// </summary>
         public void Dispose()
         {
-            _timer?.Dispose();
+            _logger.LogDebug("🧹 Disposing Download Monitor Service...");
+
+            // Dispose timer first to stop callbacks
+            if (_timer != null)
+            {
+                _timer.Dispose();
+                _timer = null;
+            }
+
+            // Then dispose HttpClient
             _httpClient?.Dispose();
+
+            _logger.LogInformation("✅ Download Monitor Service disposed cleanly");
         }
     }
 }

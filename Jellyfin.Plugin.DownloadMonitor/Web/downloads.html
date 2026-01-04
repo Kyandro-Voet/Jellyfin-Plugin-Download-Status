@@ -12,53 +12,53 @@
             margin-bottom: 1em;
             transition: all 0.2s ease;
         }
-        
+
         .download-item:hover {
             background: rgba(255, 255, 255, 0.04);
             border-color: rgba(0, 164, 220, 0.5);
         }
-        
+
         .download-header {
             display: flex;
             align-items: center;
             margin-bottom: 1em;
         }
-        
+
         .download-icon {
             font-size: 2.5em;
             margin-right: 0.5em;
             color: #00a4dc;
         }
-        
+
         .download-title {
             flex: 1;
             margin: 0;
             font-size: 1.2em;
             font-weight: 500;
         }
-        
+
         .download-status {
             padding: 0.3em 0.8em;
             border-radius: 12px;
             font-size: 0.85em;
             font-weight: 500;
         }
-        
+
         .status-downloading {
             background: rgba(0, 164, 220, 0.2);
             color: #00a4dc;
         }
-        
+
         .status-completed {
             background: rgba(0, 164, 0, 0.2);
             color: #00ff00;
         }
-        
+
         .status-paused {
             background: rgba(255, 152, 0, 0.2);
             color: #ff9800;
         }
-        
+
         .download-info {
             display: flex;
             justify-content: space-between;
@@ -67,7 +67,7 @@
             font-size: 0.9em;
             color: rgba(255, 255, 255, 0.7);
         }
-        
+
         .download-progress-bar {
             background: rgba(255, 255, 255, 0.1);
             height: 8px;
@@ -75,7 +75,7 @@
             overflow: hidden;
             position: relative;
         }
-        
+
         .download-progress-fill {
             background: linear-gradient(90deg, #00a4dc 0%, #0080ff 100%);
             height: 100%;
@@ -84,7 +84,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .download-progress-fill::after {
             content: '';
             position: absolute;
@@ -100,12 +100,12 @@
             );
             animation: shimmer 2s infinite;
         }
-        
+
         @keyframes shimmer {
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
         }
-        
+
         .download-details {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -115,35 +115,35 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             font-size: 0.85em;
         }
-        
+
         .download-detail {
             display: flex;
             flex-direction: column;
         }
-        
+
         .download-detail-label {
             color: rgba(255, 255, 255, 0.5);
             margin-bottom: 0.3em;
             font-size: 0.9em;
         }
-        
+
         .download-detail-value {
             color: rgba(255, 255, 255, 0.9);
             font-weight: 500;
         }
-        
+
         .no-downloads {
             text-align: center;
             padding: 3em;
             color: rgba(255, 255, 255, 0.5);
         }
-        
+
         .no-downloads-icon {
             font-size: 4em;
             margin-bottom: 0.5em;
             opacity: 0.3;
         }
-        
+
         .refresh-button {
             margin-bottom: 1em;
         }
@@ -168,14 +168,14 @@
                 </div>
             </div>
         </div>
-        
+
         <script type="text/javascript">
             (function() {
                 console.log("[DownloadMonitor Page] Downloads page script starting...");
-                
+
                 const pluginId = "4344669f-555b-4525-b86f-d66dbb9ae81b";
                 let downloadData = [];
-                
+
                 function updateList() {
                     console.log("[DownloadMonitor Page] Updating download list, items:", downloadData.length);
                     const container = document.getElementById('download-list-container');
@@ -214,33 +214,43 @@
                             </div>
                         `;
                     });
-                    
+
                     container.innerHTML = html;
                 }
 
+                let wsListenerAdded = false;
+
+                function handleWebSocketMessage(e) {
+                    console.log("[DownloadMonitor Page] WebSocket message received:", e.detail);
+                    const msg = e.detail;
+                    // Listen for UserDataChanged messages (as sent by the backend)
+                    if (msg.MessageType === 'UserDataChanged' && msg.Data) {
+                        try {
+                            if (msg.Data.MessageType === 'DownloadStatusUpdate' && msg.Data.Data) {
+                                console.log("[DownloadMonitor Page] Download status update received");
+                                const parsed = JSON.parse(msg.Data.Data);
+                                console.log("[DownloadMonitor Page] Parsed data:", parsed);
+                                downloadData = parsed.records || parsed.queue || [];
+                                console.log("[DownloadMonitor Page] Download items:", downloadData.length);
+                                updateList();
+                            }
+                        } catch (err) {
+                            console.error("[DownloadMonitor Page] Error parsing download data:", err);
+                        }
+                    }
+                }
+
                 function setupWebSocket() {
+                    if (wsListenerAdded) {
+                        console.log("[DownloadMonitor Page] WebSocket listener already registered, skipping");
+                        return;
+                    }
+
                     console.log("[DownloadMonitor Page] Setting up WebSocket listener...");
                     if (typeof ApiClient !== 'undefined') {
                         console.log("[DownloadMonitor Page] ApiClient available");
-                        
-                        document.addEventListener('websocketmessage', function(e) {
-                            console.log("[DownloadMonitor Page] WebSocket message received:", e.detail);
-                            const msg = e.detail;
-                            if (msg.MessageType === 'ForceKeepAlive' && msg.Data) {
-                                try {
-                                    if (msg.Data.MessageType === 'DownloadStatusUpdate' && msg.Data.Data) {
-                                        console.log("[DownloadMonitor Page] Download status update received");
-                                        const parsed = JSON.parse(msg.Data.Data);
-                                        console.log("[DownloadMonitor Page] Parsed data:", parsed);
-                                        downloadData = parsed.records || parsed.queue || [];
-                                        console.log("[DownloadMonitor Page] Download items:", downloadData.length);
-                                        updateList();
-                                    }
-                                } catch (err) {
-                                    console.error("[DownloadMonitor Page] Error parsing download data:", err);
-                                }
-                            }
-                        });
+                        document.addEventListener('websocketmessage', handleWebSocketMessage);
+                        wsListenerAdded = true;
                         console.log("[DownloadMonitor Page] WebSocket listener registered");
                     } else {
                         console.warn("[DownloadMonitor Page] ApiClient not available yet");
@@ -252,7 +262,7 @@
                     updateList();
                     setupWebSocket();
                 });
-                
+
                 console.log("[DownloadMonitor Page] Script initialized");
                 updateList();
                 setupWebSocket();
