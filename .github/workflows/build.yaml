@@ -92,7 +92,7 @@ jobs:
             jprm repo init repo_dir
           fi
 
-          jprm repo add --url https://kyandro-voet.github.io/Jellyfin-Plugin-Download-Status repo_dir artifacts/*.zip
+          jprm repo add --url https://kyandro-voet.github.io/Jellyfin-Plugin-Download-Monitor repo_dir artifacts/*.zip
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4

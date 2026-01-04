@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Download Monitor Config</title>
+    <title>Download Monitor Configuration</title>
     <style>
         .info-box {
             background: linear-gradient(135deg, rgba(0, 164, 220, 0.1) 0%, rgba(0, 100, 220, 0.05) 100%);
@@ -41,46 +41,39 @@
     <div data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox">
         <div data-role="content">
             <div class="content-primary">
-                
-                <h1>Download Monitor Instellingen</h1>
+
+                <h1>Download Monitor Settings</h1>
 
                 <div class="info-box">
                     <h3>
                         <span class="material-icons">info</span>
                         <span>Plugin Status</span>
                     </h3>
-                    <p>De plugin probeert automatisch de Download Monitor knop toe te voegen aan de sidebar.</p>
-                    
-                    <details>
-                        <summary>Docker / Handmatige Setup (klik om uit te vouwen)</summary>
-                        <p style="margin-top: 1em;">Als de sidebar knop niet verschijnt (bijv. in Docker), voer dit commando uit in je container:</p>
-                        <div class="code-box">
-                            sed -i 's|&lt;/head&gt;|&lt;script src="/web/configurationpage?name=downloadmonitor.js" defer&gt;&lt;/script&gt;&lt;/head&gt;|' /jellyfin/jellyfin-web/index.html
-                        </div>
-                        <p><strong>Tip:</strong> Voeg dit toe aan je container startup script om het persistent te maken.</p>
-                    </details>
+                    <p>The plugin attempts to automatically add the Download Monitor button to the sidebar.</p>
+
+
                 </div>
 
-                <h2 style="margin-top: 2em;">Radarr/Sonarr Configuratie</h2>
+                <h2 style="margin-top: 2em;">Radarr/Sonarr Configuration</h2>
 
                 <form id="downloadMonitorConfigForm">
-                    
+
                     <div class="inputContainer">
-                        <input is="emby-input" type="text" id="RadarrUrl" label="Radarr/Sonarr URL" required />
-                        <div class="fieldDescription">Bijv: http://192.168.1.50:7878</div>
+                        <input is="emby-input" type="text" id="RadarrUrl" label="Radarr URL" required />
+                        <div class="fieldDescription">E.g.: http://192.168.1.50:7878</div>
                     </div>
 
                     <div class="inputContainer">
-                        <input is="emby-input" type="text" id="RadarrApiKey" label="API Key" required />
-                        <div class="fieldDescription">Je vindt deze in Radarr onder Settings > General.</div>
+                        <input is="emby-input" type="text" id="RadarrApiKey" label="Radarr API Key" required />
+                        <div class="fieldDescription">You can find this in Radarr under Settings > General.</div>
                     </div>
 
                     <div class="inputContainer">
-                        <input is="emby-input" type="number" id="RefreshInterval" label="Update Interval (seconden)" min="1" />
+                        <input is="emby-input" type="number" id="RefreshInterval" label="Update Interval (seconds)" min="1" />
                     </div>
 
                     <button is="emby-button" type="submit" class="raised button-submit block">
-                        <span>Opslaan</span>
+                        <span>Save</span>
                     </button>
 
                 </form>
@@ -88,7 +81,7 @@
         </div>
 
         <script type="text/javascript">
-            var pluginId = "4344669f-555b-4525-b86f-d66dbb9ae81b"; 
+            var pluginId = "4344669f-555b-4525-b86f-d66dbb9ae81b";
 
             document.querySelector('#downloadMonitorConfigForm').addEventListener('submit', function (e) {
                 e.preventDefault();
@@ -103,13 +96,13 @@
                 });
             });
 
-            // Data inladen bij openen
+            // Load data on open
             (function loadConfig() {
                 ApiClient.getPluginConfiguration(pluginId).then(function (config) {
                     var radarrUrl = document.querySelector('#RadarrUrl');
                     var radarrApiKey = document.querySelector('#RadarrApiKey');
                     var refreshInterval = document.querySelector('#RefreshInterval');
-                    
+
                     if (radarrUrl) radarrUrl.value = config.RadarrUrl || "";
                     if (radarrApiKey) radarrApiKey.value = config.RadarrApiKey || "";
                     if (refreshInterval) refreshInterval.value = config.RefreshInterval || "2";
