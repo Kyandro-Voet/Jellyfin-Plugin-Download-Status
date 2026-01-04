@@ -41,10 +41,6 @@
     <EmbeddedResource Include="Configuration\configPage.html" />
     <None Remove="Web\downloads.html" />
     <EmbeddedResource Include="Web\downloads.html" />
-    <None Remove="Web\downloads.js" />
-    <EmbeddedResource Include="Web\downloads.js" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Web\inject.js" />
   </ItemGroup>
 </Project>

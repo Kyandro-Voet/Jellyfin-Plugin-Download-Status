@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -7,12 +9,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace Jellyfin.Plugin.DownloadMonitor.Controllers
 {
     /// <summary>
-    /// Controller for serving plugin resources.
+    /// Controller for serving plugin resources and API endpoints.
     /// </summary>
     [ApiController]
     [AllowAnonymous]
     public class DownloadMonitorController : ControllerBase
     {
+        private static readonly HttpClient HttpClient = new HttpClient();
+
         /// <summary>
         /// Serves the client-side script.
         /// </summary>
@@ -58,6 +62,39 @@ namespace Jellyfin.Plugin.DownloadMonitor.Controllers
             var content = await reader.ReadToEndAsync().ConfigureAwait(false);
 
             return Content(content, "application/javascript");
+        }
+
+        /// <summary>
+        /// Gets current download status from Radarr.
+        /// </summary>
+        /// <returns>JSON array of download items.</returns>
+        [HttpGet("Plugins/DownloadMonitor/Downloads")]
+        [Produces("application/json")]
+        public async Task<ActionResult> GetDownloads()
+        {
+            var config = Plugin.Instance?.Configuration;
+            if (config == null || string.IsNullOrEmpty(config.RadarrUrl) || string.IsNullOrEmpty(config.RadarrApiKey))
+            {
+                return Ok(new { records = Array.Empty<object>() });
+            }
+
+            var requestUrl = $"{config.RadarrUrl.TrimEnd('/')}/api/v3/queue?apikey={config.RadarrApiKey}";
+
+            try
+            {
+                var response = await HttpClient.GetAsync(requestUrl).ConfigureAwait(false);
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    return Content(jsonString, "application/json");
+                }
+
+                return StatusCode((int)response.StatusCode);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
     }
 }

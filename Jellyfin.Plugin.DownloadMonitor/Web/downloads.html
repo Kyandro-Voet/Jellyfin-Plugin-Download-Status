@@ -171,26 +171,18 @@
 
         <script type="text/javascript">
             (function() {
-                console.log("[DownloadMonitor Page] Downloads page script starting...");
-
                 const pluginId = "4344669f-555b-4525-b86f-d66dbb9ae81b";
                 let downloadData = [];
 
                 function updateList() {
-                    console.log("[DownloadMonitor Page] Updating download list, items:", downloadData.length);
                     const container = document.getElementById('download-list-container');
-                    if (!container) {
-                        console.warn("[DownloadMonitor Page] Container not found!");
-                        return;
-                    }
+                    if (!container) return;
 
                     if (!downloadData || downloadData.length === 0) {
-                        console.log("[DownloadMonitor Page] No downloads to show");
                         container.innerHTML = '<p>Geen actieve downloads.</p>';
                         return;
                     }
 
-                    console.log("[DownloadMonitor Page] Rendering", downloadData.length, "downloads");
                     let html = '<div class="verticalSection">';
                     downloadData.forEach(item => {
                         const title = item.title || "Onbekend";
@@ -218,54 +210,41 @@
                     container.innerHTML = html;
                 }
 
-                let wsListenerAdded = false;
+                async function fetchDownloads() {
+                    try {
+                        const response = await fetch('/Plugins/DownloadMonitor/Downloads');
+                        if (response.ok) {
+                            const data = await response.json();
+                            downloadData = data.records || data.queue || [];
+                            updateList();
+                        }
+                    } catch (err) {
+                        console.error('[DownloadMonitor] Error fetching downloads:', err);
+                    }
+                }
 
                 function handleWebSocketMessage(e) {
-                    console.log("[DownloadMonitor Page] WebSocket message received:", e.detail);
                     const msg = e.detail;
-                    // Listen for UserDataChanged messages (as sent by the backend)
                     if (msg.MessageType === 'UserDataChanged' && msg.Data) {
                         try {
                             if (msg.Data.MessageType === 'DownloadStatusUpdate' && msg.Data.Data) {
-                                console.log("[DownloadMonitor Page] Download status update received");
                                 const parsed = JSON.parse(msg.Data.Data);
-                                console.log("[DownloadMonitor Page] Parsed data:", parsed);
                                 downloadData = parsed.records || parsed.queue || [];
-                                console.log("[DownloadMonitor Page] Download items:", downloadData.length);
                                 updateList();
                             }
                         } catch (err) {
-                            console.error("[DownloadMonitor Page] Error parsing download data:", err);
+                            console.error('[DownloadMonitor] Error parsing download data:', err);
                         }
                     }
                 }
 
-                function setupWebSocket() {
-                    if (wsListenerAdded) {
-                        console.log("[DownloadMonitor Page] WebSocket listener already registered, skipping");
-                        return;
-                    }
-
-                    console.log("[DownloadMonitor Page] Setting up WebSocket listener...");
-                    if (typeof ApiClient !== 'undefined') {
-                        console.log("[DownloadMonitor Page] ApiClient available");
-                        document.addEventListener('websocketmessage', handleWebSocketMessage);
-                        wsListenerAdded = true;
-                        console.log("[DownloadMonitor Page] WebSocket listener registered");
-                    } else {
-                        console.warn("[DownloadMonitor Page] ApiClient not available yet");
-                    }
+                function init() {
+                    fetchDownloads();
+                    document.addEventListener('websocketmessage', handleWebSocketMessage);
                 }
 
-                document.querySelector('#downloadMonitorPage').addEventListener('pageshow', function() {
-                    console.log("[DownloadMonitor Page] Page shown, initializing...");
-                    updateList();
-                    setupWebSocket();
-                });
-
-                console.log("[DownloadMonitor Page] Script initialized");
-                updateList();
-                setupWebSocket();
+                document.querySelector('#downloadMonitorPage').addEventListener('pageshow', init);
+                init();
             })();
         </script>
     </div>
