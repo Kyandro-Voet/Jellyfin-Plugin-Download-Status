@@ -1,254 +1,115 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Downloads</title>
-    <style>
-        .download-item {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 1.5em;
-            margin-bottom: 1em;
-            transition: all 0.2s ease;
-        }
+<div id="downloadMonitorPage" data-role="page" class="page libraryPage type-interior pluginConfigurationPage mainAnimatedPage">
 
-        .download-item:hover {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: rgba(0, 164, 220, 0.5);
-        }
+    <div class="padded-top-page padded-left padded-right padded-bottom-page">
 
-        .download-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1em;
-        }
+        <div class="flex align-items-center justify-content-between" style="margin-bottom: 2em;">
+            <h1 class="pageTitle" style="margin: 0;">
+                Downloads
+            </h1>
 
-        .download-icon {
-            font-size: 2.5em;
-            margin-right: 0.5em;
-            color: #00a4dc;
-        }
+            <button is="paper-icon-button-light" class="emby-button" type="button" onclick="this.dispatchEvent(new CustomEvent('refresh-downloads', {bubbles: true}))" title="Refresh">
+                <span class="material-icons refresh" aria-hidden="true">refresh</span>
+            </button>
+        </div>
 
-        .download-title {
-            flex: 1;
-            margin: 0;
-            font-size: 1.2em;
-            font-weight: 500;
-        }
-
-        .download-status {
-            padding: 0.3em 0.8em;
-            border-radius: 12px;
-            font-size: 0.85em;
-            font-weight: 500;
-        }
-
-        .status-downloading {
-            background: rgba(0, 164, 220, 0.2);
-            color: #00a4dc;
-        }
-
-        .status-completed {
-            background: rgba(0, 164, 0, 0.2);
-            color: #00ff00;
-        }
-
-        .status-paused {
-            background: rgba(255, 152, 0, 0.2);
-            color: #ff9800;
-        }
-
-        .download-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.8em;
-            font-size: 0.9em;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .download-progress-bar {
-            background: rgba(255, 255, 255, 0.1);
-            height: 8px;
-            border-radius: 4px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .download-progress-fill {
-            background: linear-gradient(90deg, #00a4dc 0%, #0080ff 100%);
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.5s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .download-progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.3),
-                transparent
-            );
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .download-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1em;
-            margin-top: 1em;
-            padding-top: 1em;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.85em;
-        }
-
-        .download-detail {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .download-detail-label {
-            color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 0.3em;
-            font-size: 0.9em;
-        }
-
-        .download-detail-value {
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 500;
-        }
-
-        .no-downloads {
-            text-align: center;
-            padding: 3em;
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .no-downloads-icon {
-            font-size: 4em;
-            margin-bottom: 0.5em;
-            opacity: 0.3;
-        }
-
-        .refresh-button {
-            margin-bottom: 1em;
-        }
-    </style>
-</head>
-<body>
-    <div id="downloadMonitorPage" data-role="page" class="page type-interior">
-        <div data-role="content">
-            <div class="content-primary">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2em;">
-                    <h1 class="page-title" style="margin: 0;">
-                        <i class="material-icons" style="vertical-align: middle; margin-right: 0.3em;">download</i>
-                        Active Downloads
-                    </h1>
-                    <button is="emby-button" type="button" class="raised button-submit refresh-button" onclick="window.location.reload()">
-                        <i class="material-icons" style="vertical-align: middle; margin-right: 0.3em;">refresh</i>
-                        <span>Refresh</span>
-                    </button>
-                </div>
-                <div id="download-list-container">
-                    <p style="text-align: center; padding: 2em; color: rgba(255,255,255,0.5);">Loading downloads...</p>
-                </div>
+        <div id="download-list-container" class="itemsContainer vertical-list">
+            <div class="padded-top padded-bottom" style="text-align: center;">
+                <span class="material-icons" style="font-size: 2em; animation: spin 1s linear infinite;">sync</span>
             </div>
         </div>
 
-        <script type="text/javascript">
-            (function() {
-                const pluginId = "4344669f-555b-4525-b86f-d66dbb9ae81b";
-                let downloadData = [];
+    </div>
 
-                function updateList() {
-                    const container = document.getElementById('download-list-container');
-                    if (!container) return;
+    <style>
+        .download-progress-background {
+            background-color: rgba(255, 255, 255, 0.1);
+            height: 4px;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .download-progress-value {
+            background-color: #00a4dc;
+            height: 100%;
+            transition: width 0.5s ease-out;
+        }
+        /* Zorgt dat de tekstkleur goed is in dark mode */
+        .listItemBodyText.secondary {
+            color: var(--theme-text-secondary-color, #ccc);
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
 
-                    if (!downloadData || downloadData.length === 0) {
-                        container.innerHTML = '<p>Geen actieve downloads.</p>';
-                        return;
+    <script type="text/javascript">
+        (function() {
+            // Let op: we zoeken nu specifiek binnen deze pagina
+            const page = document.getElementById('downloadMonitorPage');
+            const container = page ? page.querySelector('#download-list-container') : null;
+
+            async function fetchDownloads() {
+                if (!container) return;
+
+                try {
+                    const response = await fetch('/Plugins/DownloadMonitor/Downloads');
+                    if (response.ok) {
+                        const data = await response.json();
+                        // Support voor zowel {records: []} als {queue: []} formaten
+                        renderDownloads(data.records || data.queue || []);
+                    } else {
+                        renderError();
                     }
+                } catch (err) {
+                    console.error('[DownloadMonitor] Error fetching downloads:', err);
+                    renderError();
+                }
+            }
 
-                    let html = '<div class="verticalSection">';
-                    downloadData.forEach(item => {
-                        const title = item.title || "Onbekend";
-                        const status = item.status || "Onbekend";
-                        const total = item.size || 1;
-                        const left = item.sizeleft || 0;
-                        const progress = Math.round(((total - left) / total) * 100);
+            function renderError() {
+                if(container) container.innerHTML = '<div class="padded-top padded-bottom" style="text-align: center;">Error loading downloads.</div>';
+            }
 
-                        html += `
-                            <div class="listItem" style="margin-bottom: 1em; padding: 1em; background: rgba(255,255,255,0.05); border-radius: 4px;">
-                                <div class="listItemBody">
-                                    <h3 style="margin: 0 0 0.5em 0;">${title}</h3>
-                                    <div style="display:flex; justify-content:space-between; margin-bottom: 0.5em;">
-                                        <span>Status: ${status}</span>
-                                        <span>${progress}%</span>
-                                    </div>
-                                    <div style="background:#444; height:6px; border-radius:3px; overflow:hidden;">
-                                        <div style="background:#00a4dc; height:100%; width:${progress}%; transition: width 0.3s;"></div>
-                                    </div>
+            function renderDownloads(items) {
+                if (!container) return;
+
+                if (items.length === 0) {
+                    container.innerHTML = '<div class="padded-top padded-bottom" style="text-align: center;">No active downloads.</div>';
+                    return;
+                }
+
+                const html = items.map(item => {
+                    const title = item.title || "Unknown";
+                    const status = item.status || "Unknown";
+                    const total = item.size || 1;
+                    const left = item.sizeleft || 0;
+                    // Voorkom delen door nul
+                    const progress = total > 0 ? Math.round(((total - left) / total) * 100) : 0;
+
+                    return `
+                        <div class="listItem listItem-border">
+                            <div class="listItemBody">
+                                <div class="listItemBodyText">${title}</div>
+                                <div class="listItemBodyText secondary">
+                                    ${status} &bull; ${progress}%
+                                </div>
+                                <div class="download-progress-background">
+                                    <div class="download-progress-value" style="width: ${progress}%"></div>
                                 </div>
                             </div>
-                        `;
-                    });
+                        </div>
+                    `;
+                }).join('');
 
-                    container.innerHTML = html;
-                }
+                container.innerHTML = html;
+            }
 
-                async function fetchDownloads() {
-                    try {
-                        const response = await fetch('/Plugins/DownloadMonitor/Downloads');
-                        if (response.ok) {
-                            const data = await response.json();
-                            downloadData = data.records || data.queue || [];
-                            updateList();
-                        }
-                    } catch (err) {
-                        console.error('[DownloadMonitor] Error fetching downloads:', err);
-                    }
-                }
+            // Init
+            fetchDownloads();
 
-                function handleWebSocketMessage(e) {
-                    const msg = e.detail;
-                    if (msg.MessageType === 'UserDataChanged' && msg.Data) {
-                        try {
-                            if (msg.Data.MessageType === 'DownloadStatusUpdate' && msg.Data.Data) {
-                                const parsed = JSON.parse(msg.Data.Data);
-                                downloadData = parsed.records || parsed.queue || [];
-                                updateList();
-                            }
-                        } catch (err) {
-                            console.error('[DownloadMonitor] Error parsing download data:', err);
-                        }
-                    }
-                }
+            // Listen for refresh (gebruik 'page' variabele i.p.v. querySelector om zeker te zijn)
+            if (page) {
+                page.addEventListener('refresh-downloads', fetchDownloads);
+            }
 
-                function init() {
-                    fetchDownloads();
-                    document.addEventListener('websocketmessage', handleWebSocketMessage);
-                }
-
-                document.querySelector('#downloadMonitorPage').addEventListener('pageshow', init);
-                init();
-            })();
-        </script>
-    </div>
-</body>
-</html>
-</body>
-</html>
+        })();
+    </script>
+</div>

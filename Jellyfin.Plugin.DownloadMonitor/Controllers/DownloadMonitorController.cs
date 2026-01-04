@@ -65,6 +65,29 @@ namespace Jellyfin.Plugin.DownloadMonitor.Controllers
         }
 
         /// <summary>
+        /// Serves the downloads page HTML.
+        /// </summary>
+        /// <returns>The downloads HTML page.</returns>
+        [HttpGet("Plugins/DownloadMonitor/Page")]
+        [Produces("text/html")]
+        public async Task<ActionResult> GetDownloadsPage()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceName = "Jellyfin.Plugin.DownloadMonitor.Web.downloads.html";
+
+            using var stream = assembly.GetManifestResourceStream(resourceName);
+            if (stream == null)
+            {
+                return NotFound();
+            }
+
+            using var reader = new StreamReader(stream);
+            var content = await reader.ReadToEndAsync().ConfigureAwait(false);
+
+            return Content(content, "text/html");
+        }
+
+        /// <summary>
         /// Gets current download status from Radarr.
         /// </summary>
         /// <returns>JSON array of download items.</returns>
