@@ -100,7 +100,7 @@
     }
 
     function addDownloadsMenuItem() {
-        const drawerScroll = document.querySelector('.mainDrawer-scrollContainer');
+        const drawerScroll = document.querySelector('.libraryMenuOptions');
         if (!drawerScroll) {
             if (++retryCount < MAX_RETRIES) setTimeout(addDownloadsMenuItem, 500);
             return;
@@ -108,19 +108,19 @@
 
         if (document.querySelector('#nav-downloadmonitor')) return;
 
-        const allLinks = drawerScroll.querySelectorAll('a');
-        let anchorLink = null;
-        for (let i = 0; i < allLinks.length; i++) {
-            const text = (allLinks[i].textContent || '').trim().toLowerCase();
-            if (text.includes('movie') || text.includes('film') || text.includes('lib')) {
-                anchorLink = allLinks[i];
-            }
-        }
+        // const allLinks = drawerScroll.querySelectorAll('a');
+        // let anchorLink = null;
+        // for (let i = 0; i < allLinks.length; i++) {
+        //     const text = (allLinks[i].textContent || '').trim().toLowerCase();
+        //     if (text.includes('movie') || text.includes('film') || text.includes('lib')) {
+        //         anchorLink = allLinks[i];
+        //     }
+        // }
 
         const navItem = document.createElement('a');
         navItem.id = 'nav-downloadmonitor';
         navItem.href = '#!/home.html?view=downloadmonitor';
-        navItem.className = anchorLink ? anchorLink.className : 'navMenuOption navMenuOption-withIcon';
+        navItem.className = 'navMenuOption navMenuOption-withIcon';
 
         navItem.addEventListener('click', function(e) {
             e.preventDefault();
@@ -133,12 +133,10 @@
             <span class="navMenuOptionText">Downloads</span>
         `;
 
-        if (anchorLink) {
-            anchorLink.insertAdjacentElement('afterend', navItem);
-        } else {
-            const parent = drawerScroll.querySelector('.navMenuOptions') || drawerScroll;
+
+            const parent = drawerScroll.querySelector('.libraryMenuOptions') || drawerScroll;
             parent.appendChild(navItem);
-        }
+
     }
 
     // --- EVENT LISTENERS ---
